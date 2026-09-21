@@ -10,8 +10,11 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from material_catalog import MATERIAL_SCHEMA, ORDEN_MALLAS
-from transform import promedio_del_promedio, wide_to_long_bitacora
+from material_catalog import ORDEN_MALLAS
+from transform_promedio import (
+    wide_to_long_promedio,
+    reporte_material,
+)
 # ============================================================
 # Configuración y tema (rojo / azul / blanco)
 # ============================================================
@@ -19,44 +22,79 @@ from transform import promedio_del_promedio, wide_to_long_bitacora
 # Límites normativos CEMEX por malla (% que pasa). Valores fijos por
 # especificación, no varían por prueba. Bases Hidráulicas: sin banda.
 LIMITES_GRANULOMETRICOS = {
-    "Arena No.4": {
-        "3/8": {"min": 100, "max": 100},
-        "No.4": {"min": 95, "max": 100},
-        "No.8": {"min": 70, "max": 100},
+
+    "Arena No. 4": {
+        "3/8":  {"min": 100, "max": 100},
+        "No.4": {"min": 95,  "max": 100},
+        "No.8": {"min": 70,  "max": 100},
         "No.16": {"min": 50, "max": 85},
         "No.30": {"min": 25, "max": 60},
         "No.50": {"min": 10, "max": 30},
         "No.100": {"min": 2, "max": 20},
         "Ch": {"min": 0, "max": 0},
     },
-    "Grava 10mm-3/8": {
-        "1/2": {"min": 100, "max": 100},
-        "3/8": {"min": 85, "max": 100},
-        "No.4": {"min": 10, "max": 30},
-        "No.8": {"min": 0, "max": 10},
-        "No.16": {"min": 0, "max": 5},
+
+    "Grava 10 mm": {
+        "1/2":  {"min": 100, "max": 100},
+        "3/8":  {"min": 85,  "max": 100},
+        "No.4": {"min": 10,  "max": 30},
+        "No.8": {"min": 0,   "max": 10},
+        "No.16": {"min": 0,  "max": 5},
         "Ch": {"min": 0, "max": 0},
     },
-    "Grava 20mm-3/4": {
-        "1": {"min": 100, "max": 100},
-        "3/4": {"min": 87, "max": 93},
-        "3/8": {"min": 20, "max": 55},
-        "No.4": {"min": 0, "max": 10},
-        "No.8": {"min": 0, "max": 5},
+
+    "Grava 20 mm": {
+        "1":    {"min": 100, "max": 100},
+        "3/4":  {"min": 87,  "max": 93},
+        "3/8":  {"min": 20,  "max": 55},
+        "No.4": {"min": 0,   "max": 10},
+        "No.8": {"min": 0,   "max": 5},
         "Ch": {"min": 0, "max": 0},
     },
-    "Grava 40mm-1½": {
-        "2": {"min": 100, "max": 100},
-        "1 1/2": {"min": 90, "max": 100},
-        "1": {"min": 20, "max": 55},
-        "3/4": {"min": 0, "max": 15},
-        "3/8": {"min": 0, "max": 5},
-        "Ch": {"min": 0, "max": 0},
+
+    "Grava 40 mm": {
+        "2":      {"min": 100, "max": 100},
+        "1 1/2":  {"min": 90,  "max": 100},
+        "1":      {"min": 20,  "max": 55},
+        "3/4":    {"min": 0,   "max": 15},
+        "3/8":    {"min": 0,   "max": 5},
+        "Ch":     {"min": 0,   "max": 0},
     },
+
+    "Mezcla 60% finos + 40% gruesos": {
+        "2":      {"min": 85, "max": 100},
+        "1 1/2":  {"min": 75, "max": 100},
+        "1":      {"min": 58, "max": 98},
+        "3/4":    {"min": 49, "max": 92},
+        "3/8":    {"min": 36, "max": 70},
+        "No.4":   {"min": 25, "max": 53},
+        "No.10":  {"min": 15, "max": 41},
+        "No.20":  {"min": 10, "max": 31},
+        "No.40":  {"min": 7,  "max": 26},
+        "No.60":  {"min": 5,  "max": 22},
+        "No.100": {"min": 3,  "max": 18},
+        "No.200": {"min": 0,  "max": 12},
+        "Ch":     {"min": 0,  "max": 0},
+    },
+
+    "Mezcla 80% finos + 20% gruesos": {
+        "2":      {"min": 85, "max": 100},
+        "1 1/2":  {"min": 75, "max": 100},
+        "1":      {"min": 62, "max": 100},
+        "3/4":    {"min": 54, "max": 100},
+        "3/8":    {"min": 40, "max": 100},
+        "No.4":   {"min": 30, "max": 80},
+        "No.10":  {"min": 21, "max": 60},
+        "No.20":  {"min": 13, "max": 44},
+        "No.40":  {"min": 8,  "max": 31},
+        "No.60":  {"min": 5,  "max": 23},
+        "No.100": {"min": 3,  "max": 17},
+        "No.200": {"min": 0,  "max": 10},
+        "Ch":     {"min": 0,  "max": 0},
+    },
+
 }
-
-
-BITACORA_PATH = "bitacora_sintetica.xlsx"  # <-- ajustar a la ruta real
+BITACORA_PATH = "08. Bitácora de Calidad Cerro Jardín Agosto 2026.xlsx"
 
 ROJO = "#C8102E"
 ROJO_CLARO = "#FDEAEC"
@@ -73,31 +111,29 @@ st.markdown(
 
     .stApp {{
         background-color: #F1F3F5;
-        zoom: 1;
     }}
 
     .block-container {{
         max-width: 950px;
         margin: auto;
-    
     }}
 
     /* ============================================================
-   Tarjetas de sección
-============================================================ */
+       Tarjetas de sección (todas las keys empiezan con "card_")
+    ============================================================ */
 
-    div[data-testid="stVerticalBlockBorderWrapper"] {{
+    div[class*="st-key-card_"] {{
         background-color: #F7F7F7 !important;
-        border: 5px solid #003DA5 !important;
+        border: 4px solid {AZUL} !important;
         border-radius: 18px !important;
-        padding: 10px !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.10) !important;
+        padding: 14px !important;
+        margin-bottom: 1.2rem !important;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.18) !important;
     }}
 
-    /* Header de las secciones */
-
+    /* Header azul de cada sección */
     .seccion-header {{
-        background-color: #003DA5;
+        background-color: {AZUL};
         color: white;
         padding: 14px 18px;
         border-radius: 8px;
@@ -107,69 +143,37 @@ st.markdown(
     }}
 
     /* ============================================================
-       Compactar layout general
+       Layout compacto
     ============================================================ */
-   
-    /* Ocultar toolbar superior */
+
     [data-testid="stToolbar"] {{
         display: none;
     }}
 
-    /* Ocultar decoración superior */
     [data-testid="stDecoration"] {{
         display: none;
     }}
 
-    /* Menos espacio entre elementos */
     div[data-testid="stVerticalBlock"] {{
         gap: 0.5rem;
     }}
 
-    /* Títulos más compactos */
+    /* ============================================================
+       Títulos
+    ============================================================ */
+
     h1, h2, h3 {{
         margin-top: 0.2rem !important;
         margin-bottom: 0.2rem !important;
+        color: {AZUL};
     }}
 
     h2 {{
-    font-size: 3rem !important;
+        font-size: 2rem !important;
     }}
 
     h3 {{
-    font-size: 1.5rem !important;
-    }}
-
-    /* ============================================================
-       Tarjetas de sección
-    ============================================================ */
-
-    div.st-key-kpis {{
-        background-color: {ROJO_CLARO};
-        border-left: 6px solid {ROJO};
-        border-radius: 10px;
-        padding: 1rem;
-    }}
-
-    div.st-key-granulometria {{
-        background-color: {AZUL_CLARO};
-        border-left: 6px solid {AZUL};
-        border-radius: 10px;
-        padding: 1rem;
-    }}
-
-    div.st-key-tabla {{
-        background-color: {BLANCO};
-        border: 1px solid #DDDDDD;
-        border-top: 6px solid {AZUL};
-        border-radius: 10px;
-        padding: 1rem;
-    }}
-
-    div.st-key-tendencia {{
-        background-color: {ROJO_CLARO};
-        border-left: 6px solid {ROJO};
-        border-radius: 10px;
-        padding: 1rem;
+        font-size: 1.5rem !important;
     }}
 
     /* ============================================================
@@ -183,6 +187,7 @@ st.markdown(
 
     [data-testid="stMetricValue"] {{
         color: {ROJO};
+        font-size: 1.6rem !important;
     }}
 
     [data-testid="stMetricLabel"] {{
@@ -190,32 +195,27 @@ st.markdown(
     }}
 
     /* ============================================================
-       Títulos
-    ============================================================ */
-
-    h2, h3 {{
-        color: {AZUL};
-    }}
-
-    /* ============================================================
        Separadores
     ============================================================ */
 
     hr {{
-        border-top: 2px solid {AZUL_CLARO};
+        border-top: 3px solid {AZUL};
+        opacity: 0.35;
     }}
 
     </style>
     """,
     unsafe_allow_html=True,
 )
+
+
 # ============================================================
 # Carga de datos
 # ============================================================
 
 @st.cache_data
 def cargar_datos(path: str) -> pd.DataFrame:
-    return wide_to_long_bitacora(path)
+    return wide_to_long_promedio(path)
 
 
 try:
@@ -230,7 +230,9 @@ except FileNotFoundError:
 fecha_min = df_long["Fecha"].min().date()
 fecha_max = df_long["Fecha"].max().date()
 
-material = list(MATERIAL_SCHEMA.keys())[0]
+material = sorted(
+    df_long["Material"].unique()
+)[0]
 
 fecha_inicio = fecha_max - dt.timedelta(days=30)
 
@@ -272,7 +274,6 @@ st.markdown(
 
 st.divider()
 
-
 # ============================================================
 # Filtros principales
 # ============================================================
@@ -283,14 +284,19 @@ with f1:
 
     material = st.selectbox(
         "Material",
-        list(MATERIAL_SCHEMA.keys())
+        sorted(
+            df_long["Material"].unique()
+        )
     )
 
 with f2:
 
     fecha_inicio = st.date_input(
         "Fecha inicial",
-        value=fecha_max - dt.timedelta(days=30),
+        value=max(
+            fecha_min,
+            fecha_max - dt.timedelta(days=30)
+        ),
         min_value=fecha_min,
         max_value=fecha_max,
     )
@@ -318,51 +324,66 @@ st.write("")
 # Reporte base (promedio del promedio)
 # ============================================================
 
-reporte = promedio_del_promedio(
+reporte = reporte_material(
     df_long,
     material=material,
     start=str(fecha_inicio),
     end=str(fecha_fin),
-    solo_cliente=False,
 )
 
 if reporte.empty or reporte["dias_con_dato"].sum() == 0:
     st.warning("No hay datos de este material en el periodo seleccionado.")
     st.stop()
 
-dias_totales = (fecha_fin - fecha_inicio).days + 1
-dias_con_produccion = int(reporte["dias_con_dato"].max())
+dias_con_produccion = (
+    df_long[
+        (df_long["Material"] == material)
+        & (df_long["Fecha"].dt.date >= fecha_inicio)
+        & (df_long["Fecha"].dt.date <= fecha_fin)
+    ]["Fecha"]
+    .nunique()
+)
+
+dias_totales = (
+    fecha_fin - fecha_inicio
+).days + 1
+
 cobertura_pct = round(100 * dias_con_produccion / dias_totales, 1) if dias_totales else 0
 
+tamices_df = reporte[
+    reporte["Grupo"] ==
+    "Granulometría % Pasante"
+].copy()
 
-tamices_material = MATERIAL_SCHEMA[material]["tamices"]
-propiedades_material = MATERIAL_SCHEMA[material]["propiedades"]
+propiedades_df = reporte[
+    reporte["Grupo"] !=
+    "Granulometría % Pasante"
+].copy()
 
-es_granular = len(tamices_material) > 0
+# Eliminar propiedades duplicadas si existen
+propiedades_df = (
+    propiedades_df
+    .drop_duplicates(
+        subset=["Grupo", "Propiedad"]
+    )
+    .sort_values(
+        ["Grupo", "Propiedad"]
+    )
+)
 
-if es_granular:
+es_granular = not tamices_df.empty
 
-    tamices_df = reporte[
-        reporte["Propiedad"].isin(tamices_material)
-    ].copy()
-
-    propiedades_df = reporte[
-        reporte["Propiedad"].isin(propiedades_material)
-    ].copy()
-
-else:
-
-    tamices_df = pd.DataFrame()
-
-    propiedades_df = reporte[
-        reporte["Propiedad"].isin(propiedades_material)
-    ].copy()
+tamices_material = (
+    tamices_df["Propiedad"]
+    .drop_duplicates()
+    .tolist()
+)
 
 # ============================================================
 # Datos Generales
 # ============================================================
 
-with st.container(border = True):
+with st.container(border=True):
 
     st.markdown(
         """
@@ -385,16 +406,21 @@ with st.container(border = True):
 
     with c3:
         st.caption("Inicio")
-        st.markdown(f"**{fecha_inicio.strftime('%d/%m/%y')}**")
+        st.markdown(
+            f"**{fecha_inicio.strftime('%d/%m/%Y')}**"
+        )
 
     with c4:
         st.caption("Fin")
-        st.markdown(f"**{fecha_fin.strftime('%d/%m/%y')}**")
+        st.markdown(
+            f"**{fecha_fin.strftime('%d/%m/%Y')}**"
+        )
 
     with c5:
         st.caption("Cobertura")
-        st.markdown(f"**{cobertura_pct}%**")
-
+        st.markdown(
+            f"**{cobertura_pct:.1f}%**"
+        )
 # ============================================================
 # Resultados del periodo
 # ============================================================
@@ -412,14 +438,9 @@ with st.container(border=True):
 
     tabla_resumen = propiedades_df.copy()
 
-    tabla_resumen["Resultado"] = tabla_resumen.apply(
-        lambda r: (
-            "NP"
-            if r.get("es_no_plastico", False)
-            else f"{r['promedio']:.2f}"
-        ),
-        axis=1,
-    )
+    tabla_resumen["Resultado"] = tabla_resumen[
+        "promedio"
+    ].round(2)
 
     n_cols = 7
 
@@ -464,7 +485,6 @@ with st.container(border=True):
                     unsafe_allow_html=True,
                 )
 
-
 # ============================================================
 # Granulometría
 # ============================================================
@@ -502,6 +522,7 @@ if es_granular and not tamices_df.empty:
                 .reindex(orden_presente)
                 .reset_index()
             )
+
 
             fig_curva = go.Figure()
 
@@ -542,7 +563,7 @@ if es_granular and not tamices_df.empty:
                         x=tamices_lim,
                         y=maxs,
                         mode="lines",
-                        name="Límite superior CEMEX",
+                        name="Límite superior",
                         line=dict(
                             color=AZUL,
                             width=1.5,
@@ -556,7 +577,7 @@ if es_granular and not tamices_df.empty:
                         x=tamices_lim,
                         y=mins,
                         mode="lines",
-                        name="Límite inferior CEMEX",
+                        name="Límite inferior",
                         line=dict(
                             color=AZUL,
                             width=1.5,
@@ -570,7 +591,7 @@ if es_granular and not tamices_df.empty:
                     x=tamices_ordenado["Propiedad"],
                     y=tamices_ordenado["promedio"],
                     mode="lines+markers",
-                    name="% que pasa (real)",
+                    name="% que pasa",
                     line=dict(
                         color=ROJO,
                         width=3,
@@ -589,28 +610,37 @@ if es_granular and not tamices_df.empty:
             fig_curva.update_layout(
                 xaxis_title="Malla",
                 yaxis_title="% que pasa",
+
+                xaxis=dict(
+                    type="category",
+                    categoryorder="array",
+                    categoryarray=orden_presente,
+                ),
+
                 plot_bgcolor=BLANCO,
-                paper_bgcolor=AZUL_CLARO,
+                paper_bgcolor=BLANCO,
                 font=dict(color=GRIS_TEXTO),
+
                 yaxis=dict(
                     range=[0, 100],
                     gridcolor="#DDE4F0",
                 ),
+
                 legend=dict(
                     orientation="h",
                     yanchor="bottom",
                     y=1.02,
                     x=0,
                 ),
+
                 margin=dict(t=30),
+                height=320,
             )
 
             st.plotly_chart(
                 fig_curva,
                 use_container_width=True,
-                height = 300
             )
-
     # --------------------------------------------------------
     # Tabla Granulométrica
     # --------------------------------------------------------
@@ -636,18 +666,26 @@ if es_granular and not tamices_df.empty:
 
                 minimo = None
                 maximo = None
+                estado = "-"
 
                 if limites and malla in limites:
 
                     minimo = limites[malla]["min"]
                     maximo = limites[malla]["max"]
 
+                    estado = (
+                        "✅"
+                        if minimo <= row["promedio"] <= maximo
+                        else "🔴"
+                    )
+
                 filas.append(
                     {
                         "Malla": malla,
-                        "% Que pasa": round(row["promedio"], 2),
-                        "Min. CEMEX": minimo,
-                        "Max. CEMEX": maximo,
+                        "% Pasa": round(row["promedio"], 2),
+                        "Min": minimo,
+                        "Max": maximo,
+                        "Estado": estado,
                     }
                 )
 
@@ -657,25 +695,9 @@ if es_granular and not tamices_df.empty:
                 tabla_gran,
                 hide_index=True,
                 use_container_width=True,
-                height=300,
+                height=320,
             )
-
-elif not es_granular:
-
-    with st.container(border=True):
-
-        st.markdown(
-            """
-            <div class="seccion-header">
-                📈 Granulometría
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        st.info(
-            "Este material no incluye curva granulométrica en el reporte a cliente."
-        )
+            
 # ============================================================
 # Comportamiento Histórico
 # ============================================================
@@ -701,14 +723,17 @@ with col_tendencia:
 
         propiedad_tendencia = st.selectbox(
             "Propiedad a graficar",
-            propiedades_df["Propiedad"].tolist(),
+            sorted(
+                propiedades_df["Propiedad"]
+                .drop_duplicates()
+                .tolist()
+            ),
         )
 
         serie = (
             df_long[
                 (df_long["Material"] == material)
                 & (df_long["Propiedad"] == propiedad_tendencia)
-                & (df_long["Tipo"] == "Promedio")
                 & (df_long["Fecha"].dt.date >= fecha_inicio)
                 & (df_long["Fecha"].dt.date <= fecha_fin)
             ]
@@ -718,7 +743,7 @@ with col_tendencia:
         if serie.empty:
 
             st.info(
-                "Sin datos diarios para esta propiedad en el periodo."
+                "Sin datos para esta propiedad en el periodo."
             )
 
         else:
@@ -728,6 +753,10 @@ with col_tendencia:
                 errors="coerce"
             )
 
+            serie = serie.dropna(
+                subset=["Valor_num"]
+            )
+
             fig_tendencia = go.Figure()
 
             fig_tendencia.add_trace(
@@ -735,7 +764,10 @@ with col_tendencia:
                     x=serie["Fecha"],
                     y=serie["Valor_num"],
                     mode="lines+markers",
-                    line=dict(color=AZUL, width=2),
+                    line=dict(
+                        color=AZUL,
+                        width=2,
+                    ),
                     marker=dict(
                         size=6,
                         color=ROJO,
@@ -743,7 +775,10 @@ with col_tendencia:
                 )
             )
 
-            promedio_periodo = serie["Valor_num"].mean()
+            promedio_periodo = (
+                serie["Valor_num"]
+                .mean()
+            )
 
             fig_tendencia.add_hline(
                 y=promedio_periodo,
@@ -756,15 +791,15 @@ with col_tendencia:
                 xaxis_title="Fecha",
                 yaxis_title=propiedad_tendencia,
                 plot_bgcolor=BLANCO,
-                paper_bgcolor=AZUL_CLARO,
+                paper_bgcolor=BLANCO,
                 font=dict(color=GRIS_TEXTO),
                 margin=dict(t=20),
+                height=320,
             )
 
             st.plotly_chart(
                 fig_tendencia,
                 use_container_width=True,
-                height = 250
             )
 
 # --------------------------------------------------------
@@ -800,16 +835,15 @@ with col_box:
             fig_box.update_layout(
                 yaxis_title=propiedad_tendencia,
                 plot_bgcolor=BLANCO,
-                paper_bgcolor=AZUL_CLARO,
+                paper_bgcolor=BLANCO,
                 font=dict(color=GRIS_TEXTO),
+                height=320,
             )
 
             st.plotly_chart(
                 fig_box,
                 use_container_width=True,
-                height = 325
             )
-
 
 st.divider()
 
