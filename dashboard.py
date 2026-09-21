@@ -116,38 +116,46 @@ st.markdown(
 
     h2, h3 {{ color: {AZUL}; }}
 
-    /* ---- Tarjetas de sección con color ---- */
-    div.st-key-kpis {{
-        background-color: {ROJO_CLARO};
-        border-left: 6px solid {ROJO};
-        border-radius: 10px;
-        padding: 1.2rem 1.5rem;
-    }}
-    div.st-key-granulometria {{
-        background-color: {AZUL_CLARO};
-        border-left: 6px solid {AZUL};
-        border-radius: 10px;
-        padding: 1.2rem 1.5rem;
-    }}
-    div.st-key-tabla {{
-        background-color: {BLANCO};
-        border: 1px solid #DDDDDD;
-        border-top: 6px solid {AZUL};
-        border-radius: 10px;
-        padding: 1.2rem 1.5rem;
-    }}
-    div.st-key-tendencia {{
-        background-color: {ROJO_CLARO};
-        border-left: 6px solid {ROJO};
-        border-radius: 10px;
-        padding: 1.2rem 1.5rem;
+    /* ---- Tarjetas de sección: bordes bien definidos ---- */
+    .stApp [class*="st-key-kpis"],
+    .stApp [class*="st-key-granulometria"],
+    .stApp [class*="st-key-tabla"],
+    .stApp [class*="st-key-tendencia"] {{
+        border-radius: 12px !important;
+        padding: 1.4rem 1.8rem !important;
+        margin-bottom: 2rem !important;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
     }}
 
-    [data-testid="stMetricValue"] {{ color: {ROJO}; }}
-    [data-testid="stMetricLabel"] {{ color: {GRIS_TEXTO}; }}
+    .stApp [class*="st-key-kpis"],
+    .stApp [class*="st-key-tendencia"] {{
+        background-color: {ROJO_CLARO} !important;
+        border: 3px solid {ROJO} !important;
+        border-left: 12px solid {ROJO} !important;
+    }}
 
+    .stApp [class*="st-key-granulometria"] {{
+        background-color: {AZUL_CLARO} !important;
+        border: 3px solid {AZUL} !important;
+        border-left: 12px solid {AZUL} !important;
+    }}
+
+    .stApp [class*="st-key-tabla"] {{
+        background-color: {BLANCO} !important;
+        border: 3px solid {AZUL} !important;
+        border-top: 12px solid {AZUL} !important;
+    }}
     /* ---- Separador de secciones ---- */
     hr {{ border-top: 2px solid {AZUL_CLARO}; }}
+
+    /* Tarjetas con borde nativo de Streamlit */
+    [data-testid="stVerticalBlockBorderWrapper"] {{
+        border: 2px solid #003DA5 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+        margin-bottom: 1.5rem !important;
+    }}
+
     </style>
     """,
     unsafe_allow_html=True,
