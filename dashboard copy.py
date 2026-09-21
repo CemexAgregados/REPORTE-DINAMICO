@@ -15,6 +15,10 @@ from transform_promedio import (
     wide_to_long_promedio,
     reporte_material,
 )
+from specs import (
+    ESPECIFICACIONES,
+    NOMBRES_REPORTE,
+)
 # ============================================================
 # Configuración y tema (rojo / azul / blanco)
 # ============================================================
@@ -94,6 +98,64 @@ LIMITES_GRANULOMETRICOS = {
     },
 
 }
+
+NOMBRES_REPORTE = {
+
+    "%H": "Contenido de Agua (%Humedad)",
+
+    "M.F.": "Módulo de Finura",
+
+    "%PXL": "Contenido de Finos",
+
+    "Densidad": "Densidad Relativa",
+
+    "Absorción": "Absorción",
+
+    "Coef. De Forma": "Coeficiente de Forma",
+
+    "Equivalente Arena": "Equivalente de Arena",
+
+    "Suelto": "Masa Volumétrica Suelta",
+
+    "Compacto": "Masa Volumétrica Compactada",
+}
+
+ESPECIFICACIONES = {
+
+    "Arena No. 4": {
+
+        "M.F.": {
+            "metodo": "NMX-C-111",
+            "min": 2.3,
+            "max": 3.1,
+            "unidad": "%"
+        },
+
+        "%H": {
+            "metodo": "NMX-C-166",
+            "min": "---",
+            "max": "---",
+            "unidad": "%"
+        },
+
+        "Densidad": {
+            "metodo": "NMX-C-165",
+            "min": "---",
+            "max": "---",
+            "unidad": "---"
+        },
+
+        "Absorción": {
+            "metodo": "NMX-C-165",
+            "min": "---",
+            "max": "---",
+            "unidad": "%"
+        },
+
+    },
+
+}
+
 BITACORA_PATH = "08. Bitácora de Calidad Cerro Jardín Agosto 2026.xlsx"
 
 ROJO = "#C8102E"
@@ -421,8 +483,9 @@ with st.container(border=True):
         st.markdown(
             f"**{cobertura_pct:.1f}%**"
         )
+
 # ============================================================
-# Resultados del periodo
+# Especificaciones
 # ============================================================
 
 with st.container(border=True):
@@ -430,60 +493,86 @@ with st.container(border=True):
     st.markdown(
         """
         <div class="seccion-header">
-            📋 Resultados del Periodo
+            Especificaciones
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    tabla_resumen = propiedades_df.copy()
+    tabla_specs = propiedades_df.copy()
 
-    tabla_resumen["Resultado"] = tabla_resumen[
-        "promedio"
-    ].round(2)
+    tabla_specs["Resultado"] = (
+        tabla_specs["promedio"]
+        .round(2)
+    )
 
-    n_cols = 7
+    tabla_specs["Método"] = tabla_specs["Propiedad"].apply(
+        lambda p: ESPECIFICACIONES
+            .get(material, {})
+            .get(p, {})
+            .get("metodo", "---")
+    )
 
-    for i in range(0, len(tabla_resumen), n_cols):
+    tabla_specs["Mínimo"] = tabla_specs["Propiedad"].apply(
+        lambda p: ESPECIFICACIONES
+            .get(material, {})
+            .get(p, {})
+            .get("min", "---")
+    )
 
-        cols = st.columns(n_cols)
+    tabla_specs["Máximo"] = tabla_specs["Propiedad"].apply(
+        lambda p: ESPECIFICACIONES
+            .get(material, {})
+            .get(p, {})
+            .get("max", "---")
+    )
 
-        bloque = tabla_resumen.iloc[i:i+n_cols]
+    tabla_specs["Unidad"] = tabla_specs["Propiedad"].apply(
+        lambda p: ESPECIFICACIONES
+            .get(material, {})
+            .get(p, {})
+            .get("unidad", "---")
+    )
+    tabla_specs = tabla_specs[
+        [
+            "Propiedad",
+            "Método",
+            "Mínimo",
+            "Máximo",
+            "Unidad",
+            "Resultado",
+        ]
+    ]
 
-        for col, (_, row) in zip(cols, bloque.iterrows()):
+    tabla_specs.columns = [
+        "Especificación",
+        "Método",
+        "Mínimo",
+        "Máximo",
+        "Unidad",
+        "Resultado",
+    ]
 
-            with col:
+    tabla_specs["Especificación"] = (
+        tabla_specs["Especificación"]
+        .map(
+            lambda x: NOMBRES_REPORTE.get(x, x)
+        )
+    )
 
-                st.markdown(
-                    f"""
-                    <div style="
-                        height:70px;
-                        text-align:center;
-                        font-size:14px;
-                        color:#7a7a7a;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                    ">
-                        {row["Propiedad"]}
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+    tabla_specs["Especificación"] = (
+    tabla_specs["Especificación"]
+    .map(
+        lambda x: NOMBRES_REPORTE.get(x, x)
+    )
+)
 
-                st.markdown(
-                    f"""
-                    <div style="
-                        text-align:center;
-                        font-size:28px;
-                        font-weight:700;
-                        margin-top:-8px;
-                    ">
-                        {row["Resultado"]}
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+
+    st.dataframe(
+        tabla_specs,
+        hide_index=True,
+        use_container_width=True,
+    )
 
 # ============================================================
 # Granulometría
