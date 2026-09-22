@@ -19,6 +19,8 @@ from specs import (
     ESPECIFICACIONES,
     NOMBRES_REPORTE,
 )
+
+from PIL import Image
 # ============================================================
 # Configuración y tema (rojo / azul / blanco)
 # ============================================================
@@ -120,42 +122,6 @@ NOMBRES_REPORTE = {
     "Compacto": "Masa Volumétrica Compactada",
 }
 
-ESPECIFICACIONES = {
-
-    "Arena No. 4": {
-
-        "M.F.": {
-            "metodo": "NMX-C-111",
-            "min": 2.3,
-            "max": 3.1,
-            "unidad": "%"
-        },
-
-        "%H": {
-            "metodo": "NMX-C-166",
-            "min": "---",
-            "max": "---",
-            "unidad": "%"
-        },
-
-        "Densidad": {
-            "metodo": "NMX-C-165",
-            "min": "---",
-            "max": "---",
-            "unidad": "---"
-        },
-
-        "Absorción": {
-            "metodo": "NMX-C-165",
-            "min": "---",
-            "max": "---",
-            "unidad": "%"
-        },
-
-    },
-
-}
-
 BITACORA_PATH = "08. Bitácora de Calidad Cerro Jardín Agosto 2026.xlsx"
 
 ROJO = "#C8102E"
@@ -172,40 +138,16 @@ st.markdown(
     <style>
 
     .stApp {{
-        background-color: #F1F3F5;
+        background-color: #FFFFFF;
     }}
 
     .block-container {{
-        max-width: 950px;
+        max-width: 1000px;
         margin: auto;
     }}
 
     /* ============================================================
-       Tarjetas de sección (todas las keys empiezan con "card_")
-    ============================================================ */
-
-    div[class*="st-key-card_"] {{
-        background-color: #F7F7F7 !important;
-        border: 4px solid {AZUL} !important;
-        border-radius: 18px !important;
-        padding: 14px !important;
-        margin-bottom: 1.2rem !important;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.18) !important;
-    }}
-
-    /* Header azul de cada sección */
-    .seccion-header {{
-        background-color: {AZUL};
-        color: white;
-        padding: 14px 18px;
-        border-radius: 8px;
-        font-weight: 700;
-        font-size: 1.1rem;
-        margin-bottom: 15px;
-    }}
-
-    /* ============================================================
-       Layout compacto
+       Layout limpio tipo reporte
     ============================================================ */
 
     [data-testid="stToolbar"] {{
@@ -217,43 +159,75 @@ st.markdown(
     }}
 
     div[data-testid="stVerticalBlock"] {{
-        gap: 0.5rem;
+        gap: 0.4rem;
     }}
 
     /* ============================================================
-       Títulos
+       Secciones
     ============================================================ */
 
-    h1, h2, h3 {{
+    .seccion-header {{
+        background-color: #003DA5;
+        color: white;
+        padding: 14px 18px;
+
+        font-weight: 700;
+        font-size: 1.1rem;
+
+        margin-bottom: 15px;
+
+        border-bottom: 5px solid #C8102E;
+    }}
+
+    /* ============================================================
+       Bordes tipo reporte
+    ============================================================ */
+
+    div[data-testid="stVerticalBlockBorderWrapper"] {{
+        border-radius: 0px !important;
+    }}
+
+    /* ============================================================
+   Encabezados tipo reporte PDF
+============================================================ */
+
+    h1 {{
+        text-align: center !important;
+        color: #000000 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        font-size: 2.3rem !important;
+        font-weight: 700 !important;
         margin-top: 0.2rem !important;
-        margin-bottom: 0.2rem !important;
-        color: {AZUL};
+        margin-bottom: 0rem !important;
+        letter-spacing: 0.3px;
     }}
 
     h2 {{
-        font-size: 2rem !important;
+        text-align: center !important;
+        color: #000000 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        font-size: 1.5rem !important;
+        font-weight: 600 !important;
+        margin-top: 0.4rem !important;
+        margin-bottom: 0rem !important;
     }}
 
     h3 {{
-        font-size: 1.5rem !important;
+        text-align: center !important;
+        color: #000000 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        font-size: 1.15rem !important;
+        font-weight: 600 !important;
+        margin-top: 0.3rem !important;
+        margin-bottom: 0rem !important;
     }}
 
     /* ============================================================
-       Métricas
+       Tablas
     ============================================================ */
 
-    [data-testid="stMetric"] {{
-        padding-top: 0rem !important;
-        padding-bottom: 0rem !important;
-    }}
-
-    [data-testid="stMetricValue"] {{
-        color: {ROJO};
-        font-size: 1.6rem !important;
-    }}
-
-    [data-testid="stMetricLabel"] {{
-        color: {GRIS_TEXTO};
+    [data-testid="stDataFrame"] {{
+        border: 1px solid #D0D0D0;
     }}
 
     /* ============================================================
@@ -261,15 +235,65 @@ st.markdown(
     ============================================================ */
 
     hr {{
-        border-top: 3px solid {AZUL};
-        opacity: 0.35;
+        border-top: 1px solid #BEBEBE;
+        opacity: 1;
+    }}
+
+    /* ============================================================
+   Texto del reporte
+============================================================ */
+
+    body,
+    p,
+    label,
+    span,
+    div {{
+    *color: #000000;
+    }}
+
+    /* ============================================================
+   Tablas tipo reporte
+============================================================ */
+
+    table {{
+        border-collapse: collapse !important;
+        width: 100% !important;
+    }}
+
+    thead tr th {{
+        background-color: #D9D9D9 !important;
+        color: #000000 !important;
+        font-weight: 700 !important;
+        border: 1px solid #A6A6A6 !important;
+    }}
+
+    tbody tr td {{
+        border: 1px solid #C0C0C0 !important;
+        color: #000000 !important;
+    }}
+
+    /* ============================================================
+   Tabla Granulométrica
+============================================================ */
+
+    .tabla-gran {{
+        width: 100%;
+        height: 400px;
+    }}
+
+    .tabla-gran th {{
+        background-color: #D9D9D9;
+        padding: 5px;
+    }}
+
+    .tabla-gran td {{
+        padding: 11px 8px;
     }}
 
     </style>
     """,
     unsafe_allow_html=True,
 )
-
 
 # ============================================================
 # Carga de datos
@@ -299,42 +323,6 @@ material = sorted(
 fecha_inicio = fecha_max - dt.timedelta(days=30)
 
 fecha_fin = fecha_max
-
-
-# ============================================================
-# Encabezado tipo reporte
-# ============================================================
-
-st.markdown(
-    """
-    <h1 style='text-align:center; margin-bottom:0;'>
-        CEMEX AGREGADOS MÉXICO
-    </h1>
-    """,
-    unsafe_allow_html=True,
-)
-
-st.divider()
-
-st.markdown(
-    """
-    <h2 style='text-align:center; margin-bottom:0;'>
-        Informe de Resultados
-    </h2>
-    """,
-    unsafe_allow_html=True,
-)
-
-st.markdown(
-    f"""
-    <h3 style='text-align:center; margin-top:0;'>
-        {material}
-    </h3>
-    """,
-    unsafe_allow_html=True,
-)
-
-st.divider()
 
 # ============================================================
 # Filtros principales
@@ -381,6 +369,48 @@ if fecha_inicio > fecha_fin:
     st.stop()
 
 st.write("")
+
+# ============================================================
+# Encabezado tipo reporte
+# ============================================================
+
+logo = Image.open("assets/logo_cemex.png")
+
+col_logo = st.columns([1, 2, 1])
+
+with col_logo[1]:
+    st.image(
+        logo,
+        width= 500)
+
+st.markdown(
+    """
+    <h1>
+        CEMEX AGREGADOS MÉXICO
+    </h1>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    """
+    <h2>
+        Informe de Resultados
+    </h2>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    f"""
+    <h3>
+        {material}
+    </h3>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.divider()
 
 # ============================================================
 # Reporte base (promedio del promedio)
@@ -440,7 +470,6 @@ tamices_material = (
     .drop_duplicates()
     .tolist()
 )
-
 # ============================================================
 # Datos Generales
 # ============================================================
@@ -450,39 +479,49 @@ with st.container(border=True):
     st.markdown(
         """
         <div class="seccion-header">
-            📄 Datos Generales
+            Datos Generales
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    c1, c2, c3, c4, c5 = st.columns(5)
+    datos_generales = pd.DataFrame(
+        {
+            "Campo": [
+                "Planta",
+                "Dirección",
+                "Teléfono",
+                "Agregado",
+                "Litología",
+                "Fecha Inicial Periodo",
+                "Fecha Final Periodo",
+                "Fecha de Emisión",
+               
+            ],
+            "Valor": [
+                "Cantera Cerro Jardín",
+                "Domicilio Conocido Poblado de Coayuca S/N, Atotonilco de Tula, Hidalgo",
+                "N/A",
+                material,
+                "Caliza",
+                fecha_inicio.strftime("%d/%m/%Y"),
+                fecha_fin.strftime("%d/%m/%Y"),
+                dt.date.today().strftime("%d/%m/%Y"),   
+            ],
+        }
+    )
 
-    with c1:
-        st.caption("Planta")
-        st.markdown("**Cerro Jardín**")
+    html_table = datos_generales.to_html(
+        index=False,
+        justify="left",
+        border=1
+    )
 
-    with c2:
-        st.caption("Material")
-        st.markdown(f"**{material}**")
+    st.markdown(
+        html_table,
+        unsafe_allow_html=True,
+    )
 
-    with c3:
-        st.caption("Inicio")
-        st.markdown(
-            f"**{fecha_inicio.strftime('%d/%m/%Y')}**"
-        )
-
-    with c4:
-        st.caption("Fin")
-        st.markdown(
-            f"**{fecha_fin.strftime('%d/%m/%Y')}**"
-        )
-
-    with c5:
-        st.caption("Cobertura")
-        st.markdown(
-            f"**{cobertura_pct:.1f}%**"
-        )
 
 # ============================================================
 # Especificaciones
@@ -500,6 +539,8 @@ with st.container(border=True):
     )
 
     tabla_specs = propiedades_df.copy()
+
+
 
     tabla_specs["Resultado"] = (
         tabla_specs["promedio"]
@@ -533,16 +574,17 @@ with st.container(border=True):
             .get(p, {})
             .get("unidad", "---")
     )
+
     tabla_specs = tabla_specs[
-        [
-            "Propiedad",
-            "Método",
-            "Mínimo",
-            "Máximo",
-            "Unidad",
-            "Resultado",
-        ]
+    [
+        "Propiedad",
+        "Método",
+        "Mínimo",
+        "Máximo",
+        "Unidad",
+        "Resultado",
     ]
+].copy()
 
     tabla_specs.columns = [
         "Especificación",
@@ -552,6 +594,7 @@ with st.container(border=True):
         "Unidad",
         "Resultado",
     ]
+    
 
     tabla_specs["Especificación"] = (
         tabla_specs["Especificación"]
@@ -560,19 +603,19 @@ with st.container(border=True):
         )
     )
 
-    tabla_specs["Especificación"] = (
-    tabla_specs["Especificación"]
-    .map(
-        lambda x: NOMBRES_REPORTE.get(x, x)
-    )
-)
+    tabla_specs = tabla_specs.fillna("---")
 
-
-    st.dataframe(
-        tabla_specs,
-        hide_index=True,
-        use_container_width=True,
+    html_table = tabla_specs.to_html(
+        index=False,
+        justify="left",
+        border=1
     )
+
+    st.markdown(
+        html_table,
+        unsafe_allow_html=True,
+    )
+
 
 # ============================================================
 # Granulometría
@@ -580,7 +623,7 @@ with st.container(border=True):
 
 if es_granular and not tamices_df.empty:
 
-    col_curva, col_tabla_gran = st.columns([1.2, 1])
+    col_curva, col_tabla_gran = st.columns([1.3, 1])
 
     # --------------------------------------------------------
     # Curva Granulométrica
@@ -593,7 +636,7 @@ if es_granular and not tamices_df.empty:
             st.markdown(
                 """
                 <div class="seccion-header">
-                    📈 Curva Granulométrica
+                    Curva Granulométrica
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -611,7 +654,6 @@ if es_granular and not tamices_df.empty:
                 .reindex(orden_presente)
                 .reset_index()
             )
-
 
             fig_curva = go.Figure()
 
@@ -656,7 +698,7 @@ if es_granular and not tamices_df.empty:
                         line=dict(
                             color=AZUL,
                             width=1.5,
-                            dash="dot"
+                            dash="dot",
                         ),
                     )
                 )
@@ -670,7 +712,7 @@ if es_granular and not tamices_df.empty:
                         line=dict(
                             color=AZUL,
                             width=1.5,
-                            dash="dot"
+                            dash="dot",
                         ),
                     )
                 )
@@ -697,39 +739,94 @@ if es_granular and not tamices_df.empty:
             )
 
             fig_curva.update_layout(
+
                 xaxis_title="Malla",
                 yaxis_title="% que pasa",
+
+                xaxis_title_font=dict(
+                    color="#000000",
+                    size=16,
+                ),
+
+                yaxis_title_font=dict(
+                    color="#000000",
+                    size=16,
+                ),
 
                 xaxis=dict(
                     type="category",
                     categoryorder="array",
                     categoryarray=orden_presente,
+                    tickfont=dict(
+                        color="#000000",
+                        size=14,
+                    ),
+                ),
+
+                yaxis=dict(
+                    range=[-10, 110],
+                    gridcolor="#B8B8B8",
+                    tick0=0,
+                    dtick=10,
+                    tickfont=dict(
+                        color="#000000",
+                        size=14,
+                    ),
                 ),
 
                 plot_bgcolor=BLANCO,
+
                 paper_bgcolor=BLANCO,
-                font=dict(color=GRIS_TEXTO),
 
-                yaxis=dict(
-                    range=[0, 100],
-                    gridcolor="#DDE4F0",
+                font=dict(
+                    color="#000000",
+                    size=13,
                 ),
 
-                legend=dict(
+               legend=dict(
                     orientation="h",
-                    yanchor="bottom",
-                    y=1.02,
-                    x=0,
+                    x=0.5,
+                    xanchor="center",
+                    y=-0.20,
                 ),
 
-                margin=dict(t=30),
-                height=320,
+                margin=dict(
+                    t=10,
+                    l=40,
+                    r=20,
+                    b=60,
+                ),
+
+                height=450,
             )
 
             st.plotly_chart(
                 fig_curva,
                 use_container_width=True,
             )
+
+            if not limites:
+
+                st.caption(
+                    "No existen límites definidos para este material."
+                )
+
+            else:
+
+                fuera_de_norma = tamices_ordenado[
+                    tamices_ordenado.apply(
+                        lambda r:
+                        r["Propiedad"] in limites
+                        and not (
+                            limites[r["Propiedad"]]["min"]
+                            <= r["promedio"]
+                            <= limites[r["Propiedad"]]["max"]
+                        ),
+                        axis=1,
+                    )
+                ]
+
+
     # --------------------------------------------------------
     # Tabla Granulométrica
     # --------------------------------------------------------
@@ -741,7 +838,7 @@ if es_granular and not tamices_df.empty:
             st.markdown(
                 """
                 <div class="seccion-header">
-                    📋 Tabla Granulométrica
+                    Tabla Granulométrica
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -753,8 +850,8 @@ if es_granular and not tamices_df.empty:
 
                 malla = row["Propiedad"]
 
-                minimo = None
-                maximo = None
+                minimo = "---"
+                maximo = "---"
                 estado = "-"
 
                 if limites and malla in limites:
@@ -771,22 +868,27 @@ if es_granular and not tamices_df.empty:
                 filas.append(
                     {
                         "Malla": malla,
-                        "% Pasa": round(row["promedio"], 2),
-                        "Min": minimo,
-                        "Max": maximo,
+                        "% Que pasa": round(row["promedio"], 2),
+                        "Mínimo": minimo,
+                        "Máximo": maximo,
                         "Estado": estado,
                     }
                 )
 
             tabla_gran = pd.DataFrame(filas)
 
-            st.dataframe(
-                tabla_gran,
-                hide_index=True,
-                use_container_width=True,
-                height=320,
+            html_gran = tabla_gran.to_html(
+                index=False,
+                justify="center",
+                border=1,
+                classes="tabla-gran"
             )
-            
+
+            st.markdown(
+                html_gran,
+                unsafe_allow_html=True,
+            )
+           
 # ============================================================
 # Comportamiento Histórico
 # ============================================================
@@ -804,7 +906,7 @@ with col_tendencia:
         st.markdown(
             """
             <div class="seccion-header">
-                📉 Tendencia Diaria
+                Tendencia Diaria
             </div>
             """,
             unsafe_allow_html=True,
@@ -855,10 +957,10 @@ with col_tendencia:
                     mode="lines+markers",
                     line=dict(
                         color=AZUL,
-                        width=2,
+                        width=3,
                     ),
                     marker=dict(
-                        size=6,
+                        size=8,
                         color=ROJO,
                     ),
                 )
@@ -877,13 +979,52 @@ with col_tendencia:
             )
 
             fig_tendencia.update_layout(
+
                 xaxis_title="Fecha",
                 yaxis_title=propiedad_tendencia,
+
                 plot_bgcolor=BLANCO,
                 paper_bgcolor=BLANCO,
-                font=dict(color=GRIS_TEXTO),
-                margin=dict(t=20),
-                height=320,
+
+                font=dict(
+                    family="Arial",
+                    color="#000000",
+                    size=14,
+                ),
+
+                xaxis=dict(
+                    tickfont=dict(
+                        color="#000000",
+                        size=13,
+                    ),
+                ),
+
+                yaxis=dict(
+                    tickfont=dict(
+                        color="#000000",
+                        size=13,
+                    ),
+                    gridcolor="#B8B8B8",
+                ),
+
+                xaxis_title_font=dict(
+                    color="#000000",
+                    size=16,
+                ),
+
+                yaxis_title_font=dict(
+                    color="#000000",
+                    size=16,
+                ),
+
+                margin=dict(
+                    t=20,
+                    l=40,
+                    r=20,
+                    b=40,
+                ),
+
+                height=380,
             )
 
             st.plotly_chart(
@@ -902,7 +1043,7 @@ with col_box:
         st.markdown(
             """
             <div class="seccion-header">
-                📦 Distribución
+                Distribución
             </div>
             """,
             unsafe_allow_html=True,
@@ -922,11 +1063,39 @@ with col_box:
             )
 
             fig_box.update_layout(
+
                 yaxis_title=propiedad_tendencia,
+
                 plot_bgcolor=BLANCO,
                 paper_bgcolor=BLANCO,
-                font=dict(color=GRIS_TEXTO),
-                height=320,
+
+                font=dict(
+                    family="Arial",
+                    color="#000000",
+                    size=14,
+                ),
+
+                yaxis=dict(
+                    tickfont=dict(
+                        color="#000000",
+                        size=13,
+                    ),
+                    gridcolor="#B8B8B8",
+                ),
+
+                yaxis_title_font=dict(
+                    color="#000000",
+                    size=16,
+                ),
+
+                margin=dict(
+                    t=20,
+                    l=40,
+                    r=20,
+                    b=40,
+                ),
+
+                height=455,
             )
 
             st.plotly_chart(
